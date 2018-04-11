@@ -9,6 +9,7 @@ r.connect( {host: 'localhost', port: 28015}, function(err, conn) {
         return;
     }
     connection = conn;
+    conn.use('booksDB');
 //region insert
     // r.table('authors').insert([
     //     { name: "William Adama", tv_show: "Battlestar Galactica",
@@ -79,7 +80,8 @@ r.connect( {host: 'localhost', port: 28015}, function(err, conn) {
 //endregion select by id
 
 //region realtime
-r.table('authors').changes()
+// r.table('authors').changes()
+r.table('authors').changes({includeInitial: true}) //IncludeInitial is a feature that loads the existingdata as well. (so it is like a r.table('foo')+r.table('foo').changes())
     .run(connection, function(err,cursor){
         if(err){
             console.log('error in running the select statement');
@@ -87,12 +89,40 @@ r.table('authors').changes()
         }
         cursor.each(function(err, result){
             if(err) throw err;
-            console.log(JSON.stringify(result, null, 2));
+            console.log(JSON.stringify(result.new_val, null, 2));
         });
     });
 //regionend realtime
 
+//region update
+//region update add to all
+//   r.table('authors').update({'type':'fictional'})
+//     .run(connection,function(err, result){
+//         if(err){console.log('error in running the update all statement'); return;}
+//         console.log(JSON.stringify(result,null,'..'));
+//     });
+//endregion update add to all
+
+//region update with filter
+r.table('authors').filter(r.row('id').eq('e5fb1bc0-e09f-4cde-9205-62eda1191cda'))
+.update({'type': 'tested 2'})
+.run(connection, function(err, result){
+    if(err) throw err;
+    console.log(JSON.stringify(result,null,2));
+})
+
+
+// r.table('authors').get('e5fb1bc0-e09f-4cde-9205-62eda1191cda').
+//     run(connection, function(err, result){
+//         if(err) throw err;
+//         console.log(JSON.stringify(result,null,2));
+//     })
+//endregion update with filter
+//endregion update
+
 });
+
+
 
 
 
